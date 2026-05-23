@@ -1,11 +1,23 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+import logging
 from app.database import engine, SessionLocal
 from app.models.ordem import Base, OrdemServico
 from app.schemas.ordem import OrdemCreate, OrdemConcluir
 
-Base.metadata.create_all(bind=engine)
+# Configuração de logs para monitorar o banco no Render
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Tenta criar as tabelas com tratamento de erro
+try:
+    logger.info("Tentando conectar e criar tabelas no banco de dados...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("Conexão e sincronização do banco realizadas com sucesso!")
+except Exception as e:
+    logger.error(f"AVISO: Não foi possível sincronizar o banco de dados: {e}")
+    # O servidor continuará a inicializar mesmo que o banco falhe
 
 app = FastAPI(title="iFix Manager API")
 
@@ -40,7 +52,6 @@ def criar_ordem(ordem: OrdemCreate, db: Session = Depends(get_db)):
 def listar_ordens(db: Session = Depends(get_db)):
     ordens = db.query(OrdemServico).all()
     return ordens
-
 
 @app.put("/ordens/{ordem_id}/concluir")
 def concluir_ordem(ordem_id: int, dados: OrdemConcluir, db: Session = Depends(get_db)):
