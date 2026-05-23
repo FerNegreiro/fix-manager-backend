@@ -5,7 +5,7 @@ from app.database import engine, SessionLocal
 from app.models.ordem import Base, OrdemServico
 from app.schemas.ordem import OrdemCreate, OrdemConcluir
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="iFix Manager API")
 
