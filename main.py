@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import text
+from pydantic import BaseModel
 import logging
 from app.database import engine, SessionLocal
 from app.models.ordem import Base, OrdemServico
@@ -75,3 +77,16 @@ def deletar_ordem(ordem_id: int, db: Session = Depends(get_db)):
     db.delete(ordem)
     db.commit()
     return {"mensagem": "Ordem deletada com sucesso!"}
+
+# --- SISTEMA DE LOGIN ---
+
+# Cria o formato esperado de dados vindos do Front-end
+class LoginRequest(BaseModel):
+    email: str
+    senha: str
+
+@app.post("/login")
+def login_cliente(credenciais: LoginRequest, db: Session = Depends(get_db)):
+    # Busca o usuário direto na tabela que criamos no Neon
+    query = text("SELECT * FROM usuarios WHERE email = :email")
+    resultado = db.execute(query, {"email":
